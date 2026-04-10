@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SCMV — Acesso</title>
+
+<style>
+    :root{
+        --bg:#0d1117;
+        --surface:#161b22;
+        --surface2:#1f2937;
+        --text:#e6edf3;
+        --text2:#9ca3af;
+        --accent:#1f6feb;
+        --radius:14px;
+    }
+
+    body{
+        margin:0;
+        font-family:"Sora", sans-serif;
+        background:var(--bg);
+        color:var(--text);
+        min-height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        overflow:hidden;
+    }
+
+    .bg-grid{
+        position:fixed;
+        inset:0;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size:40px 40px;
+        animation:gridMove 25s linear infinite;
+        pointer-events:none;
+    }
+    @keyframes gridMove{
+        from{transform:translateY(0);}
+        to{transform:translateY(-200px);}
+    }
+
+    .glow{
+        position:fixed;
+        width:600px;
+        height:600px;
+        border-radius:50%;
+        background:radial-gradient(circle, rgba(31,111,235,.15), transparent 70%);
+        top:-150px;
+        left:-100px;
+        filter:blur(60px);
+        pointer-events:none;
+    }
+
+    .menu{
+        width:95%;
+        max-width:480px;
+        padding:32px;
+        background:var(--surface);
+        border-radius:var(--radius);
+        border:1px solid rgba(255,255,255,0.05);
+        box-shadow:0 0 50px rgba(0,0,0,0.45);
+        animation:fadeIn 1s ease forwards;
+        text-align:center;
+    }
+
+    @keyframes fadeIn{
+        from{opacity:0; transform:translateY(30px);}
+        to{opacity:1; transform:translateY(0);}
+    }
+
+    h1{
+        text-align:center;
+        margin:0;
+        font-size:26px;
+    }
+    h2{
+        text-align:center;
+        margin-top:4px;
+        margin-bottom:25px;
+        font-size:14px;
+        color:var(--text2);
+        font-weight:500;
+    }
+
+    .btn{
+        display:block;
+        padding:14px;
+        margin:10px 0;
+        background:var(--surface2);
+        border-radius:var(--radius);
+        color:var(--text);
+        text-decoration:none;
+        font-weight:600;
+        letter-spacing:.3px;
+        border:1px solid rgba(255,255,255,0.06);
+        transition:.25s;
+        position:relative;
+        overflow:hidden;
+    }
+
+    .btn:hover{
+        transform:scale(1.03);
+        background:#1f6feb33;
+        border-color:var(--accent);
+        box-shadow:0 0 20px rgba(31,111,235,.3);
+        color:#fff;
+    }
+
+    .btn::before{
+        content:"";
+        position:absolute;
+        top:0;
+        left:-80px;
+        width:60px;
+        height:100%;
+        background:linear-gradient(120deg, transparent, rgba(255,255,255,0.25), transparent);
+        transform:skewX(-20deg);
+        transition:0.5s;
+    }
+    .btn:hover::before{
+        left:120%;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="glow"></div>
+
+<div class="menu">
+    <h1>SCMV</h1>
+    <h2>Bem-vindo</h2>
+
+    <!-- TODOS os botões agora vão para o LOGIN -->
+    <a class="btn" href="login.html">🔐 Acessar o Sistema</a>
+   
+</div>
+
+</body>
+</html>

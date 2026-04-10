@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SCMV — Acesso ao Sistema</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;--border2:#444c56;--text:#e6edf3;--text2:#8b949e;--text3:#484f58;--accent:#1f6feb;--accent2:#388bfd;--accent-bg:rgba(31,111,235,.12);--danger:#f85149;--danger-bg:rgba(248,81,73,.1);--success:#3fb950;--success-bg:rgba(63,185,80,.1);--r:10px;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(31,111,235,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(31,111,235,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+.glow{position:fixed;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(31,111,235,.08) 0%,transparent 70%);top:-100px;left:-100px;pointer-events:none;}
+.login-wrap{position:relative;z-index:1;width:100%;max-width:400px;padding:1rem;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:2.5rem 2rem;box-shadow:0 0 0 1px rgba(31,111,235,.05),0 24px 48px rgba(0,0,0,.4);}
+.logo-area{text-align:center;margin-bottom:2rem;}
+.logo-icon{width:56px;height:56px;border-radius:14px;background:var(--accent-bg);border:1px solid rgba(31,111,235,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:24px;}
+.brand{font-size:11px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.title{font-size:22px;font-weight:700;color:var(--text);}
+.subtitle{font-size:13px;color:var(--text2);margin-top:4px;}
+.field{margin-bottom:1.1rem;}
+.field label{display:block;font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text2);margin-bottom:6px;}
+.field input{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);font-size:14px;color:var(--text);font-family:'Sora',sans-serif;outline:none;transition:border .15s,box-shadow .15s;}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,111,235,.2);}
+.field input::placeholder{color:var(--text3);}
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-right:72px;}
+.pw-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:11px;font-weight:600;color:var(--text2);font-family:'Sora',sans-serif;letter-spacing:.03em;}
+.pw-btn:hover{color:var(--accent2);}
+.btn-login{width:100%;padding:12px;background:var(--accent);border:none;border-radius:var(--r);font-size:14px;font-weight:600;color:#fff;cursor:pointer;font-family:'Sora',sans-serif;margin-top:.25rem;transition:all .15s;letter-spacing:.02em;}
+.btn-login:hover{background:var(--accent2);box-shadow:0 4px 16px rgba(31,111,235,.35);}
+.btn-login:active{transform:scale(.98);}
+.msg{font-size:13px;text-align:center;padding:9px 12px;border-radius:var(--r);margin-top:.75rem;display:none;}
+.msg.error{background:var(--danger-bg);color:var(--danger);border:1px solid rgba(248,81,73,.2);}
+.msg.success{background:var(--success-bg);color:var(--success);}
+.footer{text-align:center;margin-top:1.5rem;font-size:11px;color:var(--text3);}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<div class="login-wrap">
+  <div class="card">
+    <div class="logo-area">
+      <div class="logo-icon">🏥</div>
+      <div class="brand">Santa Casa de Vitória</div>
+      <div class="title">Passagem de Plantão</div>
+      <div class="subtitle">Sistema de TI — SCMV</div>
+    </div>
+    <div class="field">
+      <label>Login</label>
+      <input type="text" id="inp-login" placeholder="seu.login" autocomplete="username"/>
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <div class="pw-wrap">
+        <input type="password" id="inp-pass" placeholder="••••••••" autocomplete="current-password"/>
+        <button class="pw-btn" onclick="togglePw()">mostrar</button>
+      </div>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Entrar no sistema</button>
+    <div class="msg" id="msg"></div>
+  </div>
+  <div class="footer">SCMV · TI &nbsp;·&nbsp; Todos os acessos são registrados</div>
+</div>
+<script>
+const SCMV=(()=>{
+  const K={users:'scmv_users',reports:'scmv_reports',estoque:'scmv_estoque',session:'scmv_session'};
+  function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+  function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+  function initStore(){let u=load(K.users,[]);if(!u.find(x=>x.login==='admin')){u.unshift({name:'Administrador SCMV',login:'admin',email:'suporte@santacasavitoria.org',password:'admin',role:'admin',createdAt:new Date().toISOString()});save(K.users,u);}}
+  function getUsers(){return load(K.users,[]);}
+  function saveUsers(u){save(K.users,u);}
+  function getReports(){return load(K.reports,[]);}
+  function saveReports(r){save(K.reports,r);}
+  function getEstoque(){return load(K.estoque,{teclado:3,mouse:11,telefone:5,bobina:29,ssd:0});}
+  function saveEstoque(e){save(K.estoque,e);}
+  function login(user,pass){const u=getUsers().find(x=>x.login===user&&x.password===pass);if(!u)return null;save(K.session,{login:u.login,name:u.name,role:u.role,ts:Date.now()});return u;}
+  function logout(){localStorage.removeItem(K.session);}
+  function getSession(){const s=load(K.session,null);if(!s)return null;if(Date.now()-s.ts>8*3600*1000){logout();return null;}return s;}
+  function genLogin(name){const p=name.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(Boolean);if(!p.length)return'usuario';return p[0][0]+p[p.length-1];}
+  function genPassword(l){return l+'@'+new Date().getFullYear();}
+  function totalReports(){return getReports().length;}
+  function hardReset(){if(!confirm('Apagar TODOS os dados e restaurar admin/admin?'))return;Object.values(K).forEach(k=>localStorage.removeItem(k));initStore();alert('Sistema redefinido! Login: admin | Senha: admin');location.reload();}
+  initStore();
+  return{getUsers,saveUsers,getReports,saveReports,getEstoque,saveEstoque,login,logout,getSession,genLogin,genPassword,totalReports,hardReset};
+})();
+if(SCMV.getSession())location.href='painel.html';
+function togglePw(){const i=document.getElementById('inp-pass');const btn=document.querySelector('.pw-btn');const hide=i.type==='password';i.type=hide?'text':'password';btn.textContent=hide?'ocultar':'mostrar';}
+function showMsg(txt,type){const el=document.getElementById('msg');el.className='msg '+type;el.textContent=txt;el.style.display='block';if(type==='success')setTimeout(()=>el.style.display='none',3000);}
+function doLogin(){const u=document.getElementById('inp-login').value.trim();const p=document.getElementById('inp-pass').value;if(!u||!p){showMsg('Preencha login e senha.','error');return;}const found=SCMV.login(u,p);if(!found){showMsg('Login ou senha incorretos.','error');return;}showMsg('Acesso liberado! Redirecionando...','success');setTimeout(()=>location.href='painel.html',800);}
+document.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script>
+</body>
+</html>

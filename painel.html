@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SCMV — Painel</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d1117;--surface:#161b22;--surface2:#21262d;--surface3:#2d333b;--border:#30363d;--border2:#444c56;--text:#e6edf3;--text2:#8b949e;--text3:#484f58;--accent:#1f6feb;--accent2:#388bfd;--accent-bg:rgba(31,111,235,.12);--danger:#f85149;--danger-bg:rgba(248,81,73,.1);--success:#3fb950;--success-bg:rgba(63,185,80,.1);--warn:#d29922;--warn-bg:rgba(210,153,34,.1);--r:10px;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-logo{font-size:15px;font-weight:700;color:var(--text);}
+.topbar-logo span{font-size:12px;font-weight:400;color:var(--text3);margin-left:6px;}
+.total-badge{background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.user-chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--text2);}
+.user-chip strong{color:var(--text);}
+.role-chip{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.role-admin{background:rgba(210,153,34,.15);color:var(--warn);border:1px solid rgba(210,153,34,.2);}
+.role-user{background:var(--accent-bg);color:var(--accent2);border:1px solid rgba(31,111,235,.2);}
+.role-supervisor{background:rgba(63,185,80,.1);color:var(--success);border:1px solid rgba(63,185,80,.2);}
+.layout{display:flex;min-height:calc(100vh - 58px);}
+.sidebar{width:224px;background:var(--surface);border-right:1px solid var(--border);padding:1.25rem .75rem;flex-shrink:0;display:flex;flex-direction:column;}
+.sidebar-bottom{margin-top:auto;padding-top:1rem;border-top:1px solid var(--border);}
+.main{flex:1;padding:1.5rem;overflow-x:hidden;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;font-size:14px;color:var(--text2);cursor:pointer;transition:all .12s;margin-bottom:2px;border:1px solid transparent;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:var(--accent-bg);color:var(--accent2);border-color:rgba(31,111,235,.2);}
+.nav-item.nav-danger{color:var(--danger);}
+.nav-item.nav-danger:hover{background:var(--danger-bg);}
+.nav-section{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);padding:12px 12px 4px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem 1.5rem;margin-bottom:1rem;}
+.card-title{font-size:15px;font-weight:600;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;}
+.card-title-left{display:flex;align-items:center;gap:8px;}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.25rem;}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem;}
+.stat-label{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.stat-value{font-size:26px;font-weight:700;color:var(--text);line-height:1;}
+.stat-sub{font-size:12px;color:var(--text2);margin-top:4px;}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:1.25rem;flex-wrap:wrap;}
+.tab{padding:9px 16px;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);padding:8px 14px;border-bottom:2px solid var(--border);}
+td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.mono{font-family:'JetBrains Mono',monospace;font-size:13px;}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+.b-admin{background:rgba(210,153,34,.15);color:var(--warn);}
+.b-supervisor{background:rgba(63,185,80,.1);color:var(--success);}
+.b-user{background:var(--surface3);color:var(--text2);}
+.b-normal{background:rgba(63,185,80,.1);color:var(--success);}
+.b-agitado{background:rgba(210,153,34,.1);color:var(--warn);}
+.b-critico{background:var(--danger-bg);color:var(--danger);}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:'Sora',sans-serif;}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{background:var(--accent2);}
+.btn-ghost{background:none;color:var(--text2);border-color:var(--border);}
+.btn-ghost:hover{background:var(--surface2);color:var(--text);}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border-color:rgba(248,81,73,.2);}
+.btn-danger:hover{background:rgba(248,81,73,.2);}
+.btn-success{background:var(--success-bg);color:var(--success);border-color:rgba(63,185,80,.2);}
+.btn-warn{background:var(--warn-bg);color:var(--warn);border-color:rgba(210,153,34,.2);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text2);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);font-family:'Sora',sans-serif;outline:none;transition:border .15s,box-shadow .15s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,111,235,.15);}
+.field input::placeholder,.field textarea::placeholder{color:var(--text3);}
+.field input[readonly]{background:var(--surface3);color:var(--text2);}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.pw-wrap{position:relative;}
+.pw-wrap input{padding-right:72px;}
+.pw-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:11px;color:var(--text3);font-family:'Sora',sans-serif;}
+.msg-box{font-size:13px;padding:9px 13px;border-radius:8px;margin-top:.6rem;display:none;}
+.msg-box.error{background:var(--danger-bg);color:var(--danger);}
+.msg-box.success{background:var(--success-bg);color:var(--success);}
+.msg-box.info{background:var(--accent-bg);color:var(--accent2);}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center;padding:1rem;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.75rem;width:100%;max-width:500px;box-shadow:0 24px 64px rgba(0,0,0,.6);max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--text3);line-height:1;}
+.report-row{border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:.6rem;cursor:pointer;transition:border-color .12s;}
+.report-row:hover{border-color:var(--border2);}
+.report-row-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:.5rem;flex-wrap:wrap;}
+.report-row-title{font-weight:600;font-size:14px;}
+.report-row-meta{font-size:12px;color:var(--text3);}
+.report-row-actions{display:flex;gap:6px;align-items:center;}
+.empty{text-align:center;padding:3rem 1rem;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:.75rem;}
+.section{display:none;}
+.section.active{display:block;}
+.page-title{font-size:20px;font-weight:700;margin-bottom:.25rem;}
+.page-sub{font-size:13px;color:var(--text2);margin-bottom:1.5rem;}
+hr.sep{border:none;border-top:1px solid var(--border);margin:1rem 0;}
+/* PLANTÃO VIEW */
+.plantao-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+@media(max-width:700px){.plantao-grid{grid-template-columns:1fr;}.stat-grid{grid-template-columns:1fr 1fr;}}
+.plantao-block{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.15rem;}
+.plantao-block-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:.75rem;}
+.check-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:500;margin:2px 0;width:100%;}
+.check-pill.ok{background:rgba(63,185,80,.08);color:var(--success);}
+.check-pill.no{background:var(--surface3);color:var(--text3);}
+.ocorr-item{margin-bottom:.75rem;}
+.ocorr-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:3px;}
+.ocorr-val{font-size:13px;color:var(--text2);line-height:1.6;}
+.ocorr-val.nd{color:var(--text3);font-style:italic;}
+.estoque-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.estoque-row:last-child{border-bottom:none;}
+.estoque-row-label{color:var(--text2);}
+.estoque-row-val{font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--text);}
+.painel-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.painel-item:last-child{border-bottom:none;}
+.painel-item-left{display:flex;flex-direction:column;gap:2px;}
+.painel-item-nome{font-weight:600;color:var(--text);}
+.painel-item-cred{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
+.painel-verif{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.painel-verif.ok{background:var(--success-bg);color:var(--success);border:1px solid rgba(63,185,80,.25);}
+.painel-verif.pend{background:var(--warn-bg);color:var(--warn);border:1px solid rgba(210,153,34,.25);}
+.status-banner{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:1rem;}
+.status-banner.normal{background:rgba(63,185,80,.1);border:1px solid rgba(63,185,80,.25);color:var(--success);}
+.status-banner.agitado{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.25);color:var(--warn);}
+.status-banner.critico{background:var(--danger-bg);border:1px solid rgba(248,81,73,.25);color:var(--danger);}
+.no-plantao{text-align:center;padding:2.5rem 1rem;color:var(--text3);}
+.no-plantao-icon{font-size:36px;margin-bottom:.75rem;}
+.select-report-bar{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;flex-wrap:wrap;}
+.select-report-bar select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;font-size:13px;color:var(--text);font-family:'Sora',sans-serif;outline:none;cursor:pointer;flex:1;min-width:200px;}
+.own-login-info{background:var(--accent-bg);border:1px solid rgba(31,111,235,.2);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--accent2);margin-bottom:1rem;display:flex;align-items:center;gap:8px;}
+.perm-note{font-size:11px;color:var(--text3);margin-top:.4rem;}
+/* ESTOQUE CUSTOM */
+.estoque-item-row{display:flex;align-items:center;gap:.75rem;padding:8px 0;border-bottom:1px solid var(--border);}
+.estoque-item-row:last-child{border-bottom:none;}
+.estoque-item-name{flex:1;font-size:14px;color:var(--text);}
+.estoque-item-qty{width:100px;}
+.estoque-item-qty input{width:100%;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:14px;color:var(--text);font-family:'JetBrains Mono',monospace;text-align:center;outline:none;}
+.estoque-item-qty input:focus{border-color:var(--accent);}
+.estoque-del-btn{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:4px;border-radius:4px;transition:color .15s;}
+.estoque-del-btn:hover{color:var(--danger);}
+/* FOOTER INFO */
+.dev-footer{font-size:11px;color:var(--text3);padding:1rem 1.5rem;text-align:center;border-top:1px solid var(--border);margin-top:2rem;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="topbar-logo">🏥 SCMV <span>TI — Plantão</span></div>
+    <div class="total-badge" id="total-badge">0 relatórios</div>
+  </div>
+  <div class="topbar-right">
+    <span class="role-chip" id="role-chip"></span>
+    <span class="user-chip">Olá, <strong id="user-name-top">...</strong></span>
+    <button class="btn btn-ghost btn-sm" onclick="doLogout()">Sair</button>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" data-sec="sec-dashboard" onclick="showSection('sec-dashboard',this)"><span>📊</span> Dashboard</div>
+    <div class="nav-item" data-sec="sec-plantao-view" onclick="showSection('sec-plantao-view',this)"><span>📋</span> Plantão Atual</div>
+    <div class="nav-item" id="nav-novo-relatorio" onclick="goPlantao()"><span>📝</span> Novo Relatório</div>
+    <div class="nav-item" data-sec="sec-historico" onclick="showSection('sec-historico',this)"><span>🗂️</span> Histórico</div>
+    <div class="nav-section">Conta</div>
+    <div class="nav-item" data-sec="sec-minha-senha" onclick="showSection('sec-minha-senha',this)"><span>🔑</span> Minha Senha</div>
+    <div class="nav-section admin-nav" style="display:none">Administração</div>
+    <div class="nav-item admin-nav" style="display:none" data-sec="sec-usuarios" onclick="showSection('sec-usuarios',this)"><span>👥</span> Usuários</div>
+    <div class="nav-item admin-nav" style="display:none" data-sec="sec-gerenciar-senhas" onclick="showSection('sec-gerenciar-senhas',this)"><span>🛡️</span> Gerenciar Senhas</div>
+    <div class="nav-item admin-nav" style="display:none" data-sec="sec-estoque" onclick="showSection('sec-estoque',this)"><span>📦</span> Estoque</div>
+    <div class="nav-item admin-nav" style="display:none" data-sec="sec-config" onclick="showSection('sec-config',this)"><span>⚙️</span> Configurações</div>
+    <div class="sidebar-bottom">
+      <div style="font-size:10px;color:var(--text3);text-align:center;line-height:1.6;">
+        Desenvolvido por<br><strong style="color:var(--text2)">Wanilton Laurenco</strong><br>
+        Auxiliar de Informática / Grupo SCMV<br>
+        <a href="mailto:wanilton.laurenco@santacasavitoria.org" style="color:var(--accent2);text-decoration:none;font-size:10px;">wanilton.laurenco@santacasavitoria.org</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <section id="sec-dashboard" class="section active">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub" id="dash-welcome">Carregando...</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Total relatórios</div><div class="stat-value" id="st-total">0</div><div class="stat-sub">todos os turnos</div></div>
+        <div class="stat-card"><div class="stat-label">Usuários</div><div class="stat-value" id="st-users">0</div><div class="stat-sub">cadastrados</div></div>
+        <div class="stat-card"><div class="stat-label">Meus relatórios</div><div class="stat-value" id="st-mine">0</div><div class="stat-sub">enviados por mim</div></div>
+        <div class="stat-card"><div class="stat-label">Último turno</div><div class="stat-value" id="st-last" style="font-size:14px;padding-top:6px;">—</div><div class="stat-sub" id="st-last-sub">nenhum</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Ação rápida</div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="dash-btn-novo" onclick="goPlantao()">📝 Novo relatório de plantão</button>
+          <button class="btn btn-ghost" onclick="showSection('sec-plantao-view',document.querySelector('[data-sec=sec-plantao-view]'))">📋 Ver plantão atual</button>
+          <button class="btn btn-ghost" onclick="showSection('sec-historico',document.querySelector('[data-sec=sec-historico]'))">🗂️ Histórico</button>
+        </div>
+      </div>
+      <div class="card" id="dash-last-card" style="display:none;">
+        <div class="card-title">
+          <div class="card-title-left">📋 Último relatório enviado</div>
+          <button class="btn btn-ghost btn-sm" onclick="showSection('sec-plantao-view',document.querySelector('[data-sec=sec-plantao-view]'))">Ver completo →</button>
+        </div>
+        <div id="dash-last-preview"></div>
+      </div>
+    </section>
+
+    <!-- PLANTÃO ATUAL -->
+    <section id="sec-plantao-view" class="section">
+      <div class="page-title">📋 Plantão Atual</div>
+      <div class="page-sub">Dados completos de qualquer relatório enviado.</div>
+      <div class="select-report-bar">
+        <select id="report-selector" onchange="renderPlantaoView()"></select>
+        <button class="btn btn-ghost btn-sm" id="plantao-btn-novo" onclick="goPlantao()">📝 Novo relatório</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCurrentHTML()">⬇️ HTML</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportCurrentPDF()">🖨️ PDF</button>
+      </div>
+      <div id="plantao-view-content">
+        <div class="no-plantao"><div class="no-plantao-icon">📭</div><p>Selecione um relatório acima.</p></div>
+      </div>
+    </section>
+
+    <!-- HISTÓRICO -->
+    <section id="sec-historico" class="section">
+      <div class="page-title">Histórico de Relatórios</div>
+      <div class="page-sub">Todos os relatórios de passagem de plantão.</div>
+      <div style="display:flex;justify-content:flex-end;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="exportAllHTML()">⬇️ Exportar tudo (HTML)</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportAllPDF()">🖨️ Exportar tudo (PDF)</button>
+      </div>
+      <div class="tabs">
+        <div class="tab active" onclick="filterHistory('todos',this)">Todos</div>
+        <div class="tab" onclick="filterHistory('meus',this)">Meus relatórios</div>
+        <div class="tab" onclick="filterHistory('normal',this)">Normal</div>
+        <div class="tab" onclick="filterHistory('agitado',this)">Agitado</div>
+        <div class="tab" onclick="filterHistory('critico',this)">Crítico</div>
+      </div>
+      <div id="history-list"></div>
+    </section>
+
+    <!-- MINHA SENHA -->
+    <section id="sec-minha-senha" class="section">
+      <div class="page-title">🔑 Minha Senha</div>
+      <div class="page-sub">Altere sua própria senha de acesso.</div>
+      <div class="card" style="max-width:420px;">
+        <div class="card-title">Alterar senha</div>
+        <div class="own-login-info">👤 Login: <strong id="my-login-display">—</strong></div>
+        <div class="field">
+          <label>Nova senha</label>
+          <div class="pw-wrap"><input type="password" id="my-new-pass" placeholder="Digite a nova senha"/><button class="pw-btn" onclick="tpw('my-new-pass',this)">mostrar</button></div>
+        </div>
+        <div class="field">
+          <label>Confirmar nova senha</label>
+          <div class="pw-wrap"><input type="password" id="my-confirm-pass" placeholder="Repita a nova senha"/><button class="pw-btn" onclick="tpw('my-confirm-pass',this)">mostrar</button></div>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="changeMyPass()">Salvar nova senha</button>
+        <div class="msg-box" id="my-pass-msg"></div>
+      </div>
+    </section>
+
+    <!-- GERENCIAR SENHAS (admin) -->
+    <section id="sec-gerenciar-senhas" class="section">
+      <div class="page-title">🛡️ Gerenciar Senhas</div>
+      <div class="page-sub">Redefina a senha de usuários com perfil <strong>Plantonista</strong> ou <strong>Supervisor</strong>.</div>
+      <div class="card" style="max-width:500px;">
+        <div class="card-title">Redefinir senha de outro usuário</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Apenas perfis <strong style="color:var(--text)">Plantonista</strong> e <strong style="color:var(--text)">Supervisor</strong> podem ser alterados aqui.</p>
+        <div class="field">
+          <label>Usuário</label>
+          <select id="rs-user-select" onchange="onSelectUser()"><option value="">— Selecione —</option></select>
+          <div class="perm-note" id="rs-role-note"></div>
+        </div>
+        <div class="field" id="rs-pass-field" style="display:none;">
+          <label>Nova senha</label>
+          <div class="pw-wrap"><input type="password" id="rs-pass" placeholder="Nova senha"/><button class="pw-btn" onclick="tpw('rs-pass',this)">mostrar</button></div>
+        </div>
+        <button class="btn btn-warn" id="rs-submit-btn" style="display:none;width:100%" onclick="resetPass()">Redefinir senha</button>
+        <div class="msg-box" id="rs-msg"></div>
+      </div>
+    </section>
+
+    <!-- USUÁRIOS (admin) -->
+    <section id="sec-usuarios" class="section">
+      <div class="page-title">Gestão de Usuários</div>
+      <div class="page-sub">Cadastre, visualize e remova membros da equipe.</div>
+      <div class="card">
+        <div class="card-title">Usuários cadastrados <button class="btn btn-primary btn-sm" onclick="openModal('modal-new-user')">+ Novo usuário</button></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Nome</th><th>Login</th><th>E-mail</th><th>Perfil</th><th>Cadastro</th><th>Ações</th></tr></thead>
+          <tbody id="users-tbody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- ESTOQUE (admin) -->
+    <section id="sec-estoque" class="section">
+      <div class="page-title">Estoque de Materiais</div>
+      <div class="page-sub">Gerencie quantidades de periféricos e insumos.</div>
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-left">📦 Materiais em estoque</div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-material')">+ Novo material</button>
+        </div>
+        <div id="estoque-list"></div>
+        <hr class="sep"/>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+          <button class="btn btn-primary" onclick="saveEst()">💾 Salvar estoque</button>
+        </div>
+        <div class="msg-box" id="est-msg"></div>
+      </div>
+    </section>
+
+    <!-- CONFIGURAÇÕES (admin) -->
+    <section id="sec-config" class="section">
+      <div class="page-title">⚙️ Configurações</div>
+      <div class="page-sub">Gerencie permissões por perfil e operações do sistema.</div>
+
+      <div class="card">
+        <div class="card-title">🛡️ Regras por perfil
+          <button class="btn btn-primary btn-sm" onclick="savePermissions()">Salvar permissões</button>
+        </div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Marque as funcionalidades permitidas para cada perfil. Administrador sempre tem acesso total.</p>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;">
+            <thead>
+              <tr style="border-bottom:2px solid var(--border);">
+                <th style="padding:10px 14px;text-align:left;color:var(--text3);font-size:11px;letter-spacing:.07em;text-transform:uppercase;">Funcionalidade</th>
+                <th style="padding:10px 14px;text-align:center;color:var(--warn);font-size:11px;letter-spacing:.07em;text-transform:uppercase;">Admin</th>
+                <th style="padding:10px 14px;text-align:center;color:var(--success);font-size:11px;letter-spacing:.07em;text-transform:uppercase;">Supervisor</th>
+                <th style="padding:10px 14px;text-align:center;color:var(--accent2);font-size:11px;letter-spacing:.07em;text-transform:uppercase;">Plantonista</th>
+              </tr>
+            </thead>
+            <tbody id="perms-tbody"></tbody>
+          </table>
+        </div>
+        <div class="msg-box" id="perm-msg"></div>
+      </div>
+
+      <div class="card" style="border-color:rgba(248,81,73,.3);">
+        <div class="card-title" style="color:var(--danger);">🗑️ Limpar registros de relatórios</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Remove <strong style="color:var(--text)">todos</strong> os relatórios salvos. Esta ação é irreversível.</p>
+        <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+          <button class="btn btn-danger" onclick="clearReports()">🗑️ Apagar todos os relatórios</button>
+          <span style="font-size:13px;color:var(--text2)">Total atual: <strong id="cfg-report-count">0</strong> relatório(s)</span>
+        </div>
+        <div class="msg-box" id="clear-msg"></div>
+      </div>
+
+      <div class="card" style="border-color:rgba(248,81,73,.2);">
+        <div class="card-title" style="color:var(--danger);">⚠️ Reset completo do sistema</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Apaga <strong style="color:var(--text)">todos</strong> os dados: usuários, relatórios e estoque. Restaura apenas o admin padrão.</p>
+        <button class="btn btn-danger" onclick="SCMV.hardReset()">⚠️ Resetar sistema completo</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODAL NOVO USUÁRIO -->
+<div class="overlay" id="modal-new-user">
+  <div class="modal">
+    <div class="modal-title">Novo usuário <button class="modal-close" onclick="closeModal('modal-new-user')">✕</button></div>
+    <div class="field"><label>Nome completo</label><input type="text" id="nu-nome" placeholder="Ex: João da Silva" oninput="previewLogin()"/></div>
+    <div class="field"><label>E-mail</label><input type="email" id="nu-email" placeholder="joao@santacasavitoria.org"/></div>
+    <div class="grid-2">
+      <div class="field"><label>Perfil</label><select id="nu-role"><option value="user">Plantonista</option><option value="supervisor">Supervisor</option><option value="admin">Administrador</option></select></div>
+      <div class="field"><label>Login gerado</label><input type="text" id="nu-login" readonly/></div>
+    </div>
+    <div class="field"><label>Senha gerada</label><input type="text" id="nu-pass" readonly style="font-family:'JetBrains Mono',monospace"/></div>
+    <button class="btn btn-primary" style="width:100%" onclick="createUser()">Criar usuário</button>
+    <div class="msg-box" id="nu-msg"></div>
+  </div>
+</div>
+
+<!-- MODAL RELATÓRIO (histórico) -->
+<div class="overlay" id="modal-report">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-title">
+      Detalhes do Relatório
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <button class="btn btn-ghost btn-sm" onclick="exportModalPDF()" title="Imprimir/PDF">🖨️ PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportModalHTML()" title="Baixar HTML">⬇️ HTML</button>
+        <button class="modal-close" onclick="closeModal('modal-report')">✕</button>
+      </div>
+    </div>
+    <div id="modal-report-body" style="font-size:14px;line-height:1.8;"></div>
+  </div>
+</div>
+
+<!-- MODAL NOVO MATERIAL -->
+<div class="overlay" id="modal-add-material">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-title">📦 Novo Material <button class="modal-close" onclick="closeModal('modal-add-material')">✕</button></div>
+    <div class="field"><label>Nome do material *</label><input type="text" id="mat-nome" placeholder="Ex: Cabos HDMI"/></div>
+    <div class="field"><label>Quantidade inicial</label><input type="number" id="mat-qty" placeholder="0" min="0" value="0"/></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:.25rem;" onclick="addMaterial()">Adicionar material</button>
+    <div class="msg-box" id="mat-msg"></div>
+  </div>
+</div>
+
+<script>
+// ── STORE ──
+const SCMV=(()=>{
+  const K={users:'scmv_users',reports:'scmv_reports',estoque:'scmv_estoque',session:'scmv_session',paineis:'scmv_paineis',estoque_custom:'scmv_estoque_custom'};
+  function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+  function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+  function initStore(){let u=load(K.users,[]);if(!u.find(x=>x.login==='admin')){u.unshift({name:'Administrador SCMV',login:'admin',email:'suporte@santacasavitoria.org',password:'admin',role:'admin',createdAt:new Date().toISOString()});save(K.users,u);}}
+  function getUsers(){return load(K.users,[]);}
+  function saveUsers(u){save(K.users,u);}
+  function getReports(){return load(K.reports,[]);}
+  function saveReports(r){save(K.reports,r);}
+  function getEstoque(){return load(K.estoque,{teclado:3,mouse:11,telefone:5,bobina:29,ssd:0});}
+  function saveEstoque(e){save(K.estoque,e);}
+  // custom materials: [{id, nome, qty}]
+  function getCustomMaterials(){return load(K.estoque_custom,[]);}
+  function saveCustomMaterials(m){save(K.estoque_custom,m);}
+  function getPaineis(){return load(K.paineis,[]);}
+  function getSession(){const s=load(K.session,null);if(!s)return null;if(Date.now()-s.ts>8*3600*1000){localStorage.removeItem(K.session);return null;}return s;}
+  function logout(){localStorage.removeItem(K.session);}
+  function genLogin(name){const p=name.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z\s]/g,'').split(/\s+/).filter(Boolean);if(!p.length)return'usuario';return p[0][0]+p[p.length-1];}
+  function genPassword(l){return l+'@'+new Date().getFullYear();}
+  function totalReports(){return getReports().length;}
+  function hardReset(){if(!confirm('Apagar TODOS os dados?'))return;Object.values(K).forEach(k=>localStorage.removeItem(k));initStore();alert('Redefinido! Login: admin | Senha: admin');location.href='login.html';}
+  initStore();
+  return{getUsers,saveUsers,getReports,saveReports,getEstoque,saveEstoque,getCustomMaterials,saveCustomMaterials,getPaineis,getSession,logout,genLogin,genPassword,totalReports,hardReset};
+})();
+
+const sess=SCMV.getSession();
+if(!sess){location.href='login.html';}
+const IS_ADMIN=sess&&sess.role==='admin';
+const IS_SUP=sess&&(sess.role==='admin'||sess.role==='supervisor');
+const IS_SUPERVISOR_ONLY=sess&&sess.role==='supervisor';
+
+const STATUS_ICONS={normal:'✅',agitado:'⚠️',critico:'🔴'};
+const STATUS_LABELS={normal:'Normal',agitado:'Agitado',critico:'Crítico'};
+// base items (chave → label)
+const BASE_ITEMS={teclado:'Teclados',mouse:'Mouses',telefone:'Telefones',bobina:'Bobinas ponto',ssd:'SSDs'};
+
+// ── DATE HELPERS ──
+function fmtDate(iso){
+  try{return new Date(iso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch{return iso;}
+}
+function fmtDateOnly(str){
+  // str can be YYYY-MM-DD or already formatted
+  if(!str)return '—';
+  if(str.includes('/')){return str.length>10?str.substring(0,10):str;}// already dd/mm/yyyy
+  try{const[y,m,d]=str.split('-');return d+'/'+m+'/'+y;}catch{return str;}
+}
+
+function doLogout(){SCMV.logout();location.href='login.html';}
+function goPlantao(){location.href='plantao.html';}
+
+// ── INIT ──
+function init(){
+  if(!sess)return;
+  document.getElementById('user-name-top').textContent=sess.name;
+  const rc=document.getElementById('role-chip');
+  const roles={admin:'Admin',supervisor:'Supervisor',user:'Plantonista'};
+  rc.textContent=roles[sess.role]||sess.role;
+  rc.className='role-chip role-'+sess.role;
+
+  if(IS_ADMIN){
+    document.querySelectorAll('.admin-nav').forEach(el=>el.style.display='');
+    renderUsers();renderEstoque();populateGerenciarSenhas();
+  }
+  if(IS_SUPERVISOR_ONLY){
+    ['nav-novo-relatorio','dash-btn-novo','plantao-btn-novo'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+  }
+  document.getElementById('my-login-display').textContent=sess.login;
+  updateStats();renderHistory('todos');renderDashLastPreview();populateReportSelector();
+}
+
+// ── STATS ──
+function updateStats(){
+  const reports=SCMV.getReports();const users=SCMV.getUsers();const n=reports.length;
+  document.getElementById('total-badge').textContent=n+' relatório'+(n===1?'':'s');
+  document.getElementById('st-total').textContent=n;
+  document.getElementById('st-users').textContent=users.length;
+  document.getElementById('st-mine').textContent=reports.filter(r=>r.login===sess.login).length;
+  document.getElementById('dash-welcome').textContent='Bem-vindo, '+sess.name+'!';
+  const last=reports.find(r=>r.login===sess.login);
+  if(last){document.getElementById('st-last').textContent=last.status.toUpperCase();document.getElementById('st-last-sub').textContent=fmtDateOnly(last.date);}
+}
+
+// ── DASHBOARD PREVIEW ──
+function renderDashLastPreview(){
+  const r=SCMV.getReports()[0];
+  const card=document.getElementById('dash-last-card');
+  if(!r){card.style.display='none';return;}
+  card.style.display='';
+  const checksDone=(r.checklist||[]).filter(c=>c.done).length;
+  const checksTotal=(r.checklist||[]).length;
+  document.getElementById('dash-last-preview').innerHTML=
+    '<div class="status-banner '+r.status+'">'+(STATUS_ICONS[r.status]||'')+' Turno '+(STATUS_LABELS[r.status]||r.status)+' — '+r.turno+'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:.75rem;">'
+    +'<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Data</div><div style="font-weight:600;">'+fmtDateOnly(r.date)+'</div></div>'
+    +'<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Plantonista</div><div style="font-weight:600;">'+r.author+'</div></div>'
+    +'<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Checklist</div><div style="font-weight:600;">'+checksDone+'/'+checksTotal+' ✔</div></div>'
+    +'</div><p style="font-size:12px;color:var(--text3)">Enviado em '+fmtDate(r.createdAt)+'</p>';
+}
+
+// ── REPORT SELECTOR ──
+function populateReportSelector(){
+  const reports=SCMV.getReports();
+  const sel=document.getElementById('report-selector');
+  const list=IS_SUP?reports:reports.filter(r=>r.login===sess.login);
+  sel.innerHTML='<option value="">— Selecione um relatório —</option>'
+    +list.map((r,i)=>'<option value="'+r.id+'">Rel. #'+(list.length-i)+' — '+fmtDateOnly(r.date)+' · '+r.turno+' · '+r.author+' ('+r.status.toUpperCase()+')</option>').join('');
+  if(list.length){sel.value=list[0].id;renderPlantaoView();}
+}
+
+// ── PLANTÃO VIEW ──
+let _currentReportId=null;
+function renderPlantaoView(){
+  const id=parseInt(document.getElementById('report-selector').value);
+  _currentReportId=id||null;
+  const container=document.getElementById('plantao-view-content');
+  if(!id){container.innerHTML='<div class="no-plantao"><div class="no-plantao-icon">📭</div><p>Selecione um relatório acima.</p></div>';return;}
+  const r=SCMV.getReports().find(x=>x.id===id);
+  if(!r){container.innerHTML='<div class="no-plantao"><div class="no-plantao-icon">❓</div><p>Não encontrado.</p></div>';return;}
+  container.innerHTML=buildReportHTML(r);
+}
+
+function buildReportHTML(r){
+  const checklist=r.checklist||[];
+  const est=r.estoque||{};
+  const paineis=SCMV.getPaineis();
+  const checkHTML=checklist.length
+    ?checklist.map(c=>'<div class="check-pill '+(c.done?'ok':'no')+'">'+(c.done?'✅':'⬜')+' '+c.label+'</div>').join('')
+    :'<span style="color:var(--text3);font-size:13px">Sem itens.</span>';
+  function ocorrBlock(label,val){const nd=!val||val==='N/D';return'<div class="ocorr-item"><div class="ocorr-label">'+label+'</div><div class="ocorr-val'+(nd?' nd':'')+'">'+( nd?'N/D':val)+'</div></div>';}
+
+  // estoque: base + custom salvos no relatório
+  let estRows='';
+  Object.entries(BASE_ITEMS).forEach(([k,l])=>{estRows+='<div class="estoque-row"><span class="estoque-row-label">'+l+'</span><span class="estoque-row-val">'+(est[k]!==undefined?est[k]:'—')+'</span></div>';});
+  // custom materials at time of report (stored as est._custom array)
+  if(est._custom&&Array.isArray(est._custom)){est._custom.forEach(m=>{estRows+='<div class="estoque-row"><span class="estoque-row-label">'+m.nome+'</span><span class="estoque-row-val">'+m.qty+'</span></div>';});}
+
+  const painelHTML=paineis.length
+    ?paineis.map(p=>{const cred=p.tipo!=='generico'&&p.usuario?p.usuario+(p.ip?' · '+p.ip:''):p.ip||p.identificacao||'';return'<div class="painel-item"><div class="painel-item-left"><span class="painel-item-nome">'+p.nome+'</span>'+(cred?'<span class="painel-item-cred">'+cred+'</span>':'')+'</div><span class="painel-verif '+(p.verificado?'ok':'pend')+'">'+(p.verificado?'✓ Verificado':'Pendente')+'</span></div>';}).join('')
+    :'<span style="color:var(--text3);font-size:13px">Nenhum painel.</span>';
+
+  return'<div class="status-banner '+r.status+'">'+(STATUS_ICONS[r.status]||'')+' Turno '+(STATUS_LABELS[r.status]||r.status)+' — '+r.turno+'</div>'
+    +'<div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:1.25rem;font-size:13px;">'
+    +'<span>📅 <strong>'+fmtDateOnly(r.date)+'</strong></span><span>👤 <strong>'+r.author+'</strong> ('+r.login+')</span><span style="color:var(--text3)">🕐 '+fmtDate(r.createdAt)+'</span></div>'
+    +'<div class="plantao-grid">'
+    +'<div class="plantao-block"><div class="plantao-block-title">✅ Checklist</div>'+checkHTML+'</div>'
+    +'<div class="plantao-block"><div class="plantao-block-title">📝 Ocorrências</div>'+ocorrBlock('Reclamações',r.reclamacoes)+ocorrBlock('Troca de equipamento',r.troca)+ocorrBlock('Pendentes / agendados',r.pendentes)+ocorrBlock('Informações adicionais',r.adicional)+'</div>'
+    +'<div class="plantao-block"><div class="plantao-block-title">📦 Estoque</div>'+estRows+'</div>'
+    +'<div class="plantao-block"><div class="plantao-block-title">🖥️ Painéis de acesso</div>'+painelHTML+'</div>'
+    +'</div>';
+}
+
+// ── SEÇÃO ──
+function showSection(id,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(el)el.classList.add('active');
+  updateStats();
+  if(id==='sec-historico')renderHistory('todos');
+  if(id==='sec-usuarios')renderUsers();
+  if(id==='sec-estoque')renderEstoque();
+  if(id==='sec-plantao-view')populateReportSelector();
+  if(id==='sec-dashboard')renderDashLastPreview();
+  if(id==='sec-gerenciar-senhas')populateGerenciarSenhas();
+  if(id==='sec-config'){renderPermsTable();document.getElementById('cfg-report-count').textContent=SCMV.getReports().length;}
+}
+
+// ── HISTÓRICO ──
+function filterHistory(f,el){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderHistory(f);
+}
+let _histFilter='todos';
+function renderHistory(f){
+  _histFilter=f||'todos';
+  const all=SCMV.getReports();
+  let list=IS_SUP?[...all]:all.filter(r=>r.login===sess.login);
+  if(f==='meus')list=all.filter(r=>r.login===sess.login);
+  else if(['normal','agitado','critico'].includes(f))list=list.filter(r=>r.status===f);
+  const el=document.getElementById('history-list');
+  if(!list.length){el.innerHTML='<div class="empty"><div class="empty-icon">📭</div>Nenhum relatório encontrado.</div>';return;}
+  const total=all.length;
+  el.innerHTML=list.map(r=>{
+    const num=total-all.findIndex(x=>x.id===r.id);
+    return'<div class="report-row">'
+      +'<div class="report-row-top" onclick="viewReport('+r.id+')" style="cursor:pointer;">'
+      +'<span class="report-row-title">Relatório #'+num+' — '+r.turno+'</span>'
+      +'<span class="badge b-'+r.status+'">'+r.status.toUpperCase()+'</span></div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">'
+      +'<div class="report-row-meta">📅 '+fmtDateOnly(r.date)+' · 👤 '+r.author+' · 🕐 '+fmtDate(r.createdAt)+'</div>'
+      +'<div class="report-row-actions">'
+      +'<button class="btn btn-ghost btn-sm" onclick="exportOneHTML('+r.id+')" title="Baixar HTML">⬇️ HTML</button>'
+      +'<button class="btn btn-ghost btn-sm" onclick="exportOnePDF('+r.id+')" title="Imprimir PDF">🖨️ PDF</button>'
+      +'</div></div></div>';
+  }).join('');
+}
+
+// ── VIEW RELATÓRIO (modal) ──
+let _modalReportId=null;
+function viewReport(id){
+  _modalReportId=id;
+  const r=SCMV.getReports().find(x=>x.id===id);if(!r)return;
+  const checks=(r.checklist||[]).map(c=>(c.done?'✅':'⬜')+' '+c.label).join('<br>');
+  const est=r.estoque||{};
+  let estStr=Object.entries(BASE_ITEMS).map(([k,l])=>'<b>'+l+'</b>: '+(est[k]!==undefined?est[k]:'—')).join(' · ');
+  if(est._custom&&Array.isArray(est._custom)){estStr+=' · '+est._custom.map(m=>'<b>'+m.nome+'</b>: '+m.qty).join(' · ');}
+  document.getElementById('modal-report-body').innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1rem;">'
+    +'<div><div style="font-size:11px;color:var(--text3);margin-bottom:3px">DATA</div><b>'+fmtDateOnly(r.date)+'</b></div>'
+    +'<div><div style="font-size:11px;color:var(--text3);margin-bottom:3px">TURNO</div><b>'+r.turno+'</b></div>'
+    +'<div><div style="font-size:11px;color:var(--text3);margin-bottom:3px">STATUS</div><span class="badge b-'+r.status+'">'+r.status.toUpperCase()+'</span></div></div>'
+    +'<p><b>'+r.author+'</b> <span style="color:var(--text3)">('+r.login+')</span></p>'
+    +'<hr class="sep"/><div style="font-size:11px;color:var(--text3);margin-bottom:6px">CHECKLIST</div>'
+    +'<div style="line-height:2;margin-bottom:1rem;font-size:13px;">'+checks+'</div><hr class="sep"/>'
+    +'<p><b>Reclamações:</b></p><p style="color:var(--text2);margin:.25rem 0 .75rem">'+r.reclamacoes+'</p>'
+    +'<p><b>Troca:</b></p><p style="color:var(--text2);margin:.25rem 0 .75rem">'+r.troca+'</p>'
+    +'<p><b>Pendentes:</b></p><p style="color:var(--text2);margin:.25rem 0 .75rem">'+r.pendentes+'</p>'
+    +'<p><b>Informações adicionais:</b></p><p style="color:var(--text2);margin:.25rem 0 .75rem">'+r.adicional+'</p>'
+    +'<hr class="sep"/><p style="font-size:13px">Estoque: '+estStr+'</p>'
+    +'<p style="font-size:11px;color:var(--text3);margin-top:.5rem">Enviado em '+fmtDate(r.createdAt)+'</p>';
+  openModal('modal-report');
+}
+
+// ── EXPORT HTML ──
+function buildExportHTMLStr(r){
+  const checks=(r.checklist||[]).map(c=>(c.done?'✅':'⬜')+' '+c.label).join('<br>');
+  const est=r.estoque||{};
+  let estRows=Object.entries(BASE_ITEMS).map(([k,l])=>'<tr><td>'+l+'</td><td>'+( est[k]!==undefined?est[k]:'—')+'</td></tr>').join('');
+  if(est._custom&&Array.isArray(est._custom)){estRows+=est._custom.map(m=>'<tr><td>'+m.nome+'</td><td>'+m.qty+'</td></tr>').join('');}
+  return`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"/><title>Relatório de Plantão — ${fmtDateOnly(r.date)}</title>
+<style>body{font-family:Arial,sans-serif;background:#fff;color:#111;padding:2rem;max-width:800px;margin:auto;}
+h1{font-size:20px;margin-bottom:.5rem;}h2{font-size:14px;color:#555;border-bottom:1px solid #ddd;padding-bottom:.25rem;margin:1rem 0 .5rem;}
+table{width:100%;border-collapse:collapse;font-size:13px;}td,th{padding:6px 10px;border:1px solid #ddd;}th{background:#f0f0f0;}
+.ok{color:green;}.no{color:#aaa;}.meta{font-size:12px;color:#555;margin-bottom:1rem;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;}
+.normal{background:#d1fae5;color:#065f46;}.agitado{background:#fef3c7;color:#92400e;}.critico{background:#fee2e2;color:#991b1b;}
+</style></head><body>
+<h1>🏥 SCMV — Relatório de Passagem de Plantão</h1>
+<div class="meta">
+<b>Data:</b> ${fmtDateOnly(r.date)} &nbsp;|&nbsp; <b>Turno:</b> ${r.turno} &nbsp;|&nbsp;
+<b>Status:</b> <span class="badge ${r.status}">${r.status.toUpperCase()}</span><br>
+<b>Plantonista:</b> ${r.author} (${r.login}) &nbsp;|&nbsp; <b>Enviado em:</b> ${fmtDate(r.createdAt)}
+</div>
+<h2>✅ Checklist</h2><p style="line-height:2;font-size:13px;">${checks}</p>
+<h2>📝 Ocorrências</h2>
+<table><tr><th>Item</th><th>Descrição</th></tr>
+<tr><td>Reclamações</td><td>${r.reclamacoes||'N/D'}</td></tr>
+<tr><td>Troca de equipamento</td><td>${r.troca||'N/D'}</td></tr>
+<tr><td>Pendentes / Agendados</td><td>${r.pendentes||'N/D'}</td></tr>
+<tr><td>Informações adicionais</td><td>${r.adicional||'N/D'}</td></tr>
+</table>
+<h2>📦 Estoque</h2>
+<table><tr><th>Material</th><th>Qtd</th></tr>${estRows}</table>
+<p style="margin-top:2rem;font-size:11px;color:#888;">Gerado em ${fmtDate(new Date().toISOString())} — SCMV Sistema de Plantão</p>
+</body></html>`;
+}
+
+function downloadHTML(content,filename){
+  const a=document.createElement('a');a.href='data:text/html;charset=utf-8,'+encodeURIComponent(content);a.download=filename;a.click();
+}
+function exportOneHTML(id){const r=SCMV.getReports().find(x=>x.id===id);if(!r)return;downloadHTML(buildExportHTMLStr(r),'relatorio-'+fmtDateOnly(r.date).replace(/\//g,'-')+'.html');}
+function exportCurrentHTML(){if(!_currentReportId){alert('Selecione um relatório primeiro.');return;}exportOneHTML(_currentReportId);}
+function exportModalHTML(){if(!_modalReportId)return;exportOneHTML(_modalReportId);}
+function exportAllHTML(){
+  const all=SCMV.getReports();const list=IS_SUP?all:all.filter(r=>r.login===sess.login);
+  if(!list.length){alert('Sem relatórios para exportar.');return;}
+  const combined=list.map((r,i)=>buildExportHTMLStr(r)).join('<hr style="margin:2rem 0;border:2px solid #ccc;"/>');
+  downloadHTML('<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Todos os Relatórios SCMV</title></head><body>'+combined+'</body></html>','relatorios-todos.html');
+}
+
+function printHTML(content){
+  const w=window.open('','_blank','width=900,height=700');
+  w.document.write(content);w.document.close();
+  w.onload=()=>{w.print();};
+}
+function exportOnePDF(id){const r=SCMV.getReports().find(x=>x.id===id);if(!r)return;printHTML(buildExportHTMLStr(r));}
+function exportCurrentPDF(){if(!_currentReportId){alert('Selecione um relatório primeiro.');return;}exportOnePDF(_currentReportId);}
+function exportModalPDF(){if(!_modalReportId)return;exportOnePDF(_modalReportId);}
+function exportAllPDF(){
+  const all=SCMV.getReports();const list=IS_SUP?all:all.filter(r=>r.login===sess.login);
+  if(!list.length){alert('Sem relatórios para exportar.');return;}
+  const combined=list.map(r=>buildExportHTMLStr(r)).join('<div style="page-break-after:always"></div>');
+  printHTML('<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Todos os Relatórios SCMV</title></head><body>'+combined+'</body></html>');
+}
+
+// ── MINHA SENHA ──
+function changeMyPass(){
+  const np=document.getElementById('my-new-pass').value;
+  const cp=document.getElementById('my-confirm-pass').value;
+  if(!np){showMsg('my-pass-msg','Digite a nova senha.','error');return;}
+  if(np!==cp){showMsg('my-pass-msg','As senhas não coincidem.','error');return;}
+  if(np.length<4){showMsg('my-pass-msg','Mínimo 4 caracteres.','error');return;}
+  const users=SCMV.getUsers();const idx=users.findIndex(u=>u.login===sess.login);
+  if(idx<0){showMsg('my-pass-msg','Usuário não encontrado.','error');return;}
+  users[idx].password=np;SCMV.saveUsers(users);
+  showMsg('my-pass-msg','Senha alterada com sucesso!','success');
+  document.getElementById('my-new-pass').value='';document.getElementById('my-confirm-pass').value='';
+}
+
+// ── GERENCIAR SENHAS ──
+function populateGerenciarSenhas(){
+  const sel=document.getElementById('rs-user-select');if(!sel)return;
+  const elegíveis=SCMV.getUsers().filter(u=>u.role==='user'||u.role==='supervisor');
+  sel.innerHTML='<option value="">— Selecione o usuário —</option>'
+    +elegíveis.map(u=>'<option value="'+u.login+'">'+u.name+' ('+u.login+') — '+(u.role==='user'?'Plantonista':'Supervisor')+'</option>').join('');
+  document.getElementById('rs-pass-field').style.display='none';
+  document.getElementById('rs-submit-btn').style.display='none';
+  document.getElementById('rs-role-note').textContent='';
+}
+function onSelectUser(){
+  const login=document.getElementById('rs-user-select').value;
+  const pf=document.getElementById('rs-pass-field');const sb=document.getElementById('rs-submit-btn');const note=document.getElementById('rs-role-note');
+  if(!login){pf.style.display='none';sb.style.display='none';note.textContent='';return;}
+  const u=SCMV.getUsers().find(x=>x.login===login);if(!u)return;
+  note.textContent='Perfil: '+(u.role==='user'?'Plantonista':'Supervisor');
+  pf.style.display='';sb.style.display='';
+  document.getElementById('rs-pass').value='';
+}
+function resetPass(){
+  const login=document.getElementById('rs-user-select').value;const np=document.getElementById('rs-pass').value;
+  if(!login){showMsg('rs-msg','Selecione um usuário.','error');return;}
+  if(!np){showMsg('rs-msg','Digite a nova senha.','error');return;}
+  if(np.length<4){showMsg('rs-msg','Mínimo 4 caracteres.','error');return;}
+  const users=SCMV.getUsers();const u=users.find(x=>x.login===login);
+  if(!u||u.role==='admin'){showMsg('rs-msg','Operação não permitida.','error');return;}
+  u.password=np;SCMV.saveUsers(users);
+  showMsg('rs-msg','Senha de "'+login+'" redefinida!','success');
+  document.getElementById('rs-pass').value='';
+}
+
+// ── USUÁRIOS ──
+function renderUsers(){
+  document.getElementById('users-tbody').innerHTML=SCMV.getUsers().map(u=>
+    '<tr><td>'+u.name+'</td><td class="mono">'+u.login+'</td><td style="font-size:13px;color:var(--text2)">'+u.email+'</td>'
+    +'<td><span class="badge b-'+u.role+'">'+u.role+'</span></td>'
+    +'<td style="font-size:12px;color:var(--text3)">'+(u.createdAt?fmtDate(u.createdAt):'—')+'</td>'
+    +'<td>'+(u.login!=='admin'?'<button class="btn btn-danger btn-sm" onclick="deleteUser(\''+u.login+'\')">Remover</button>':'')+'</td></tr>'
+  ).join('');
+}
+function deleteUser(login){
+  if(!confirm('Remover "'+login+'"?'))return;
+  SCMV.saveUsers(SCMV.getUsers().filter(u=>u.login!==login));renderUsers();updateStats();
+}
+function previewLogin(){
+  const l=SCMV.genLogin(document.getElementById('nu-nome').value);
+  document.getElementById('nu-login').value=l;
+  document.getElementById('nu-pass').value=l?SCMV.genPassword(l):'';
+}
+function createUser(){
+  const name=document.getElementById('nu-nome').value.trim();
+  const email=document.getElementById('nu-email').value.trim();
+  const role=document.getElementById('nu-role').value;
+  if(!name||!email){showMsg('nu-msg','Preencha nome e e-mail.','error');return;}
+  const login=SCMV.genLogin(name);const password=SCMV.genPassword(login);
+  const users=SCMV.getUsers();
+  if(users.find(u=>u.login===login)){showMsg('nu-msg','Login "'+login+'" já existe.','error');return;}
+  users.push({name,login,email,password,role,createdAt:new Date().toISOString()});SCMV.saveUsers(users);
+  showMsg('nu-msg','Criado! Login: '+login+' | Senha: '+password,'success');
+  renderUsers();updateStats();
+  ['nu-nome','nu-email','nu-login','nu-pass'].forEach(id=>document.getElementById(id).value='');
+}
+
+// ── ESTOQUE (base + custom) ──
+function renderEstoque(){
+  const est=SCMV.getEstoque();
+  const custom=SCMV.getCustomMaterials();
+  let html='';
+  // base items
+  Object.entries(BASE_ITEMS).forEach(([k,label])=>{
+    html+=`<div class="estoque-item-row">
+      <span class="estoque-item-name">${label}</span>
+      <div class="estoque-item-qty"><input type="number" id="est-${k}" value="${est[k]||0}" min="0"/></div>
+      <span style="width:28px;"></span>
+    </div>`;
+  });
+  // custom items
+  custom.forEach(m=>{
+    html+=`<div class="estoque-item-row" id="mat-row-${m.id}">
+      <span class="estoque-item-name">${m.nome}</span>
+      <div class="estoque-item-qty"><input type="number" id="est-custom-${m.id}" value="${m.qty||0}" min="0"/></div>
+      <button class="estoque-del-btn" onclick="deleteMaterial('${m.id}')" title="Remover">✕</button>
+    </div>`;
+  });
+  document.getElementById('estoque-list').innerHTML=html||'<p style="color:var(--text3);font-size:13px;padding:.5rem 0;">Nenhum material cadastrado.</p>';
+}
+function saveEst(){
+  const est={};
+  Object.keys(BASE_ITEMS).forEach(k=>{const el=document.getElementById('est-'+k);if(el)est[k]=parseInt(el.value)||0;});
+  SCMV.saveEstoque(est);
+  // save custom quantities
+  const custom=SCMV.getCustomMaterials();
+  custom.forEach(m=>{const el=document.getElementById('est-custom-'+m.id);if(el)m.qty=parseInt(el.value)||0;});
+  SCMV.saveCustomMaterials(custom);
+  showMsg('est-msg','Estoque salvo com sucesso!','success');
+}
+function addMaterial(){
+  const nome=document.getElementById('mat-nome').value.trim();
+  const qty=parseInt(document.getElementById('mat-qty').value)||0;
+  if(!nome){showMsg('mat-msg','Informe o nome do material.','error');return;}
+  const custom=SCMV.getCustomMaterials();
+  custom.push({id:'c'+Date.now(),nome,qty});
+  SCMV.saveCustomMaterials(custom);
+  document.getElementById('mat-nome').value='';document.getElementById('mat-qty').value='0';
+  showMsg('mat-msg','Material adicionado!','success');
+  closeModal('modal-add-material');
+  renderEstoque();
+}
+function deleteMaterial(id){
+  if(!confirm('Remover este material do estoque?'))return;
+  SCMV.saveCustomMaterials(SCMV.getCustomMaterials().filter(m=>m.id!==id));
+  renderEstoque();
+}
+
+// ── PERMISSÕES ──
+const DEFAULT_PERMS={
+  dashboard:{admin:true,supervisor:true,user:true},
+  plantao_atual:{admin:true,supervisor:true,user:true},
+  novo_relatorio:{admin:true,supervisor:false,user:true},
+  enviar:{admin:true,supervisor:false,user:true},
+  historico:{admin:true,supervisor:true,user:true},
+  minha_senha:{admin:true,supervisor:true,user:true},
+  gerenciar_senhas:{admin:true,supervisor:false,user:false},
+  usuarios_estoque:{admin:true,supervisor:false,user:false},
+};
+const PERM_LABELS={dashboard:'Dashboard',plantao_atual:'Plantão Atual',novo_relatorio:'Novo Relatório',enviar:'Enviar relatório',historico:'Ver histórico',minha_senha:'Minha Senha',gerenciar_senhas:'Gerenciar Senhas',usuarios_estoque:'Usuários / Estoque'};
+function loadPerms(){try{const v=localStorage.getItem('scmv_perms');return v?JSON.parse(v):JSON.parse(JSON.stringify(DEFAULT_PERMS));}catch{return JSON.parse(JSON.stringify(DEFAULT_PERMS));}}
+function savePermissions(){
+  const perms=loadPerms();
+  Object.keys(perms).forEach(key=>{
+    const sup=document.getElementById('perm-sup-'+key);const usr=document.getElementById('perm-usr-'+key);
+    if(sup)perms[key].supervisor=sup.checked;if(usr)perms[key].user=usr.checked;
+  });
+  localStorage.setItem('scmv_perms',JSON.stringify(perms));
+  showMsg('perm-msg','✅ Permissões salvas com sucesso!','success');
+}
+function renderPermsTable(){
+  const perms=loadPerms();const tb=document.getElementById('perms-tbody');if(!tb)return;
+  tb.innerHTML=Object.entries(perms).map(([key,p])=>`
+    <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 14px;font-weight:500;">${PERM_LABELS[key]||key}</td>
+      <td style="text-align:center;padding:10px 14px;"><input type="checkbox" checked disabled style="accent-color:var(--warn);width:16px;height:16px;" title="Admin sempre tem acesso"/></td>
+      <td style="text-align:center;padding:10px 14px;"><input type="checkbox" id="perm-sup-${key}" ${p.supervisor?'checked':''} style="accent-color:var(--success);width:16px;height:16px;cursor:pointer;"/></td>
+      <td style="text-align:center;padding:10px 14px;"><input type="checkbox" id="perm-usr-${key}" ${p.user?'checked':''} style="accent-color:var(--accent2);width:16px;height:16px;cursor:pointer;"/></td>
+    </tr>`).join('');
+}
+function clearReports(){
+  if(!confirm('Apagar TODOS os relatórios? Esta ação não pode ser desfeita.'))return;
+  localStorage.removeItem('scmv_reports');
+  updateStats();
+  document.getElementById('cfg-report-count').textContent='0';
+  showMsg('clear-msg','✅ Todos os relatórios foram apagados.','success');
+}
+
+// ── UTILS ──
+function tpw(id,btn){const i=document.getElementById(id);const h=i.type==='password';i.type=h?'text':'password';btn.textContent=h?'ocultar':'mostrar';}
+function showMsg(id,txt,type){const el=document.getElementById(id);if(!el)return;el.className='msg-box '+type;el.textContent=txt;el.style.display='block';if(type==='success')setTimeout(()=>el.style.display='none',4000);}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+init();
+</script>
+</body>
+</html>

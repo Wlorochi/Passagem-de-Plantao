@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SCMV — Relatório de Plantão</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#0d1117;--surface:#161b22;--surface2:#21262d;--surface3:#2d333b;--border:#30363d;--border2:#444c56;--text:#e6edf3;--text2:#8b949e;--text3:#484f58;--accent:#1f6feb;--accent2:#388bfd;--accent-bg:rgba(31,111,235,.12);--danger:#f85149;--danger-bg:rgba(248,81,73,.1);--success:#3fb950;--success-bg:rgba(63,185,80,.1);--warn:#d29922;--warn-bg:rgba(210,153,34,.1);--r:10px;}
+body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 1.5rem;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-logo{font-size:15px;font-weight:700;color:var(--text);}
+.topbar-logo span{font-size:12px;font-weight:400;color:var(--text3);margin-left:6px;}
+.total-badge{background:var(--accent);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.03em;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:'Sora',sans-serif;}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn-primary:hover{background:var(--accent2);box-shadow:0 4px 14px rgba(31,111,235,.35);}
+.btn-primary:active{transform:scale(.98);}
+.btn-ghost{background:none;color:var(--text2);border-color:var(--border);}
+.btn-ghost:hover{background:var(--surface2);color:var(--text);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.page{max-width:900px;margin:0 auto;padding:1.5rem;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;}
+.page-title{font-size:22px;font-weight:700;}
+.page-sub{font-size:13px;color:var(--text2);margin-top:4px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem;margin-bottom:1.25rem;}
+.card-title{font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.card-title-left{display:flex;align-items:center;gap:8px;}
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text2);margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);font-family:'Sora',sans-serif;outline:none;transition:border .15s,box-shadow .15s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,111,235,.15);}
+.field input::placeholder,.field textarea::placeholder{color:var(--text3);}
+.field input[readonly]{background:var(--surface3);color:var(--text2);}
+.field textarea{resize:vertical;min-height:90px;line-height:1.6;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.status-group{display:flex;gap:8px;flex-wrap:wrap;}
+.status-opt{position:relative;}
+.status-opt input[type=radio]{position:absolute;opacity:0;width:0;height:0;}
+.status-label{display:flex;align-items:center;gap:8px;padding:10px 20px;border:1px solid var(--border2);border-radius:20px;cursor:pointer;font-size:14px;font-weight:500;transition:all .15s;user-select:none;}
+.status-opt input:checked+.status-label.normal{background:rgba(63,185,80,.15);border-color:rgba(63,185,80,.4);color:var(--success);}
+.status-opt input:checked+.status-label.agitado{background:rgba(210,153,34,.15);border-color:rgba(210,153,34,.4);color:var(--warn);}
+.status-opt input:checked+.status-label.critico{background:rgba(248,81,73,.15);border-color:rgba(248,81,73,.4);color:var(--danger);}
+.status-label:hover{border-color:var(--border2);background:var(--surface2);}
+.checklist{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.check-row{display:flex;align-items:center;gap:10px;padding:10px 13px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .12s;}
+.check-row:hover{background:var(--surface2);}
+.check-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0;}
+.check-row.done{background:rgba(63,185,80,.07);border-color:rgba(63,185,80,.25);}
+.check-row span{font-size:13px;line-height:1.4;}
+.estoque-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;}
+.sec-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:.6rem;}
+.info-adicional-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;font-size:13px;color:var(--text2);line-height:1.75;white-space:pre-wrap;}
+.info-adicional-box strong{color:var(--accent2);}
+.info-adicional-box code{background:var(--surface3);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);}
+.painel-grid{display:grid;gap:.75rem;}
+.painel-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;transition:border .15s;}
+.painel-card.verificado{border-color:rgba(63,185,80,.35);background:rgba(63,185,80,.05);}
+.painel-card-info{flex:1;}
+.painel-nome{font-size:14px;font-weight:700;color:var(--text);margin-bottom:.5rem;display:flex;align-items:center;gap:8px;}
+.painel-badge-verif{font-size:10px;font-weight:700;background:var(--success-bg);color:var(--success);border:1px solid rgba(63,185,80,.3);border-radius:20px;padding:2px 8px;}
+.painel-badge-pend{font-size:10px;font-weight:700;background:var(--warn-bg);color:var(--warn);border:1px solid rgba(210,153,34,.3);border-radius:20px;padding:2px 8px;}
+.painel-rows{display:flex;flex-wrap:wrap;gap:.4rem .75rem;}
+.painel-row{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:5px;}
+.painel-row strong{color:var(--text);}
+.painel-row code{background:var(--surface3);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--warn);}
+.painel-actions{display:flex;flex-direction:column;gap:.5rem;align-items:flex-end;flex-shrink:0;}
+.toggle-verif{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:none;color:var(--text2);font-family:'Sora',sans-serif;transition:all .15s;white-space:nowrap;}
+.toggle-verif:hover{background:var(--surface3);}
+.toggle-verif.ativo{background:rgba(63,185,80,.12);border-color:rgba(63,185,80,.35);color:var(--success);}
+.btn-del-painel{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:4px;border-radius:4px;transition:color .15s;}
+.btn-del-painel:hover{color:var(--danger);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.75rem;width:100%;max-width:460px;transform:translateY(12px) scale(.97);transition:transform .2s;}
+.modal-overlay.open .modal{transform:translateY(0) scale(1);}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px;}
+.modal-footer{display:flex;justify-content:flex-end;gap:.75rem;margin-top:1.5rem;}
+.readonly-banner{background:rgba(210,153,34,.1);border:1px solid rgba(210,153,34,.3);border-radius:8px;padding:12px 16px;font-size:13px;color:var(--warn);font-weight:500;margin-bottom:1.25rem;display:flex;align-items:center;gap:10px;}
+.submit-bar{background:var(--surface);border-top:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:sticky;bottom:0;z-index:50;}
+.submit-bar-left{font-size:13px;color:var(--text2);}
+.submit-bar-left strong{color:var(--text);}
+.msg-bar{padding:12px 16px;border-radius:var(--r);font-size:14px;font-weight:500;margin-top:1rem;display:none;}
+.msg-bar.success{background:var(--success-bg);color:var(--success);border:1px solid rgba(63,185,80,.2);}
+.msg-bar.error{background:var(--danger-bg);color:var(--danger);border:1px solid rgba(248,81,73,.2);}
+hr.sep{border:none;border-top:1px solid var(--border);margin:.75rem 0;}
+.user-chip{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:13px;color:var(--text2);}
+.user-chip strong{color:var(--text);}
+.role-chip{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.role-admin{background:rgba(210,153,34,.15);color:var(--warn);border:1px solid rgba(210,153,34,.2);}
+.role-user{background:var(--accent-bg);color:var(--accent2);border:1px solid rgba(31,111,235,.2);}
+.role-supervisor{background:rgba(63,185,80,.1);color:var(--success);border:1px solid rgba(63,185,80,.2);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">🏥 SCMV <span>Relatório de Plantão</span></div>
+    <div class="total-badge" id="total-badge">0 relatórios</div>
+  </div>
+  <div class="topbar-right">
+    <span class="role-chip" id="role-chip-top"></span>
+    <span class="user-chip">👤 <strong id="user-top">...</strong></span>
+    <a href="painel.html" class="btn btn-ghost btn-sm">← Painel</a>
+    <button class="btn btn-ghost btn-sm" onclick="SCMV.logout();location.href='login.html'">Sair</button>
+  </div>
+</div>
+
+<div class="page">
+  <div class="page-header">
+    <div>
+      <div class="page-title">📋 Relatório de Passagem de Plantão</div>
+      <div class="page-sub" id="page-sub">Preencha todos os campos antes de enviar.</div>
+    </div>
+    <div style="text-align:right;font-size:12px;color:var(--text3)" id="datetime-area"></div>
+  </div>
+
+  <div class="readonly-banner" id="readonly-banner" style="display:none;">
+    ⚠️ Modo <strong>somente visualização</strong> — Supervisores não podem enviar relatórios.
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="card-title-left">📌 Identificação do turno</div></div>
+    <div class="grid-3">
+      <div class="field"><label>Responsável</label><input type="text" id="r-resp" readonly/></div>
+      <div class="field"><label>Data</label><input type="date" id="r-data"/></div>
+      <div class="field"><label>Turno</label>
+        <select id="r-turno">
+          <option>Noturno (19h–07h)</option>
+          <option>Diurno (07h–19h)</option>
+        </select>
+      </div>
+    </div>
+    <div class="sec-label">Status geral do turno</div>
+    <div class="status-group">
+      <div class="status-opt"><input type="radio" name="status" id="s-normal" value="normal" checked/><label class="status-label normal" for="s-normal">✅ Normal</label></div>
+      <div class="status-opt"><input type="radio" name="status" id="s-agitado" value="agitado"/><label class="status-label agitado" for="s-agitado">⚠️ Agitado</label></div>
+      <div class="status-opt"><input type="radio" name="status" id="s-critico" value="critico"/><label class="status-label critico" for="s-critico">🔴 Crítico</label></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="card-title-left">✅ Checklist de rotina</div></div>
+    <div class="checklist" id="checklist">
+      <label class="check-row"><input type="checkbox" onchange="this.closest('.check-row').classList.toggle('done',this.checked)"/><span>Celular do plantão testado / carregado</span></label>
+      <label class="check-row"><input type="checkbox" onchange="this.closest('.check-row').classList.toggle('done',this.checked)"/><span>VIVACE — imagem.santacasavitoria.org:22022</span></label>
+      <label class="check-row"><input type="checkbox" onchange="this.closest('.check-row').classList.toggle('done',this.checked)"/><span>IDCE — idce.santacasavitoria.org</span></label>
+      <label class="check-row"><input type="checkbox" onchange="this.closest('.check-row').classList.toggle('done',this.checked)"/><span>CODINs e portas de acesso restrito</span></label>
+      <label class="check-row"><input type="checkbox" onchange="this.closest('.check-row').classList.toggle('done',this.checked)"/><span>Relógio de ponto verificado</span></label>
+      <label class="check-row"><input type="checkbox" onchange="this.closest('.check-row').classList.toggle('done',this.checked)"/><span>Monitorar interconexões / links de internet</span></label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="card-title-left">📝 Principais acontecimentos</div></div>
+    <div class="grid-2">
+      <div class="field"><label>1. Reclamações durante o turno?</label>
+        <textarea id="r-reclamacoes" placeholder="Descreva as reclamações ou informe N/D..."></textarea>
+      </div>
+      <div class="field"><label>2. Troca de equipamento?</label>
+        <textarea id="r-troca" placeholder="Nome do equipamento, origem e destino — ou N/D..."></textarea>
+      </div>
+      <div class="field"><label>3. Atendimentos pendentes / agendados</label>
+        <textarea id="r-pendentes" placeholder="Informe os pendentes para o próximo turno ou N/D..."></textarea>
+      </div>
+      <div class="field"><label>4. Informações adicionais</label>
+        <textarea id="r-adicional" placeholder="Notas, ITs novas, instalações, orientações..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="card-title-left">📌 Informações adicionais sobre o turno</div></div>
+    <div class="info-adicional-box">- Nova IT para a instalação externa do mCockpit e ConnectWeb disponível impressa na mesa dos plantonistas e no caminho de rede: <code>J:\Tecnologia da Informação</code>. Seguindo a planilha na pasta <code>J:\Tecnologia da Informação\1 - DOCUMENTAÇÃO\Atualização Computadores</code>, o arquivo HSCMV.
+
+- Instalação de impressoras devem ser realizadas pelo endereço: <code>\\srv-hsc-print</code> ou <code>\\10.0.70.124</code>
+
+- Por gentileza, dar baixa dos produtos no MV após utilizar.
+
+_______________________________________________________________________________________________________
+
+<strong>Observação:</strong> Favor manter a mesa do plantão e balcão organizados. Quando passar plantão, passar em ordem.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <div class="card-title-left">🖥️ Acesso aos Painéis</div>
+      <button class="btn btn-primary btn-sm" id="btn-add-painel" onclick="abrirModalPainel()">+ Adicionar Painel</button>
+    </div>
+    <div class="painel-grid" id="painel-grid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><div class="card-title-left">📦 Materiais em estoque <span style="font-size:11px;color:var(--text3);text-transform:none;font-weight:400;letter-spacing:0">(atualize ao usar)</span></div></div>
+    <div class="estoque-grid">
+      <div class="field" style="margin:0"><label>Teclados</label><input type="number" id="est-teclado" min="0"/></div>
+      <div class="field" style="margin:0"><label>Mouses</label><input type="number" id="est-mouse" min="0"/></div>
+      <div class="field" style="margin:0"><label>Telefones</label><input type="number" id="est-telefone" min="0"/></div>
+      <div class="field" style="margin:0"><label>Bobinas ponto</label><input type="number" id="est-bobina" min="0"/></div>
+      <div class="field" style="margin:0"><label>SSDs</label><input type="number" id="est-ssd" min="0"/></div>
+    </div>
+    <p style="font-size:11px;color:var(--text3);margin-top:.75rem;">⚠️ Não misture materiais usados com novos na contagem.</p>
+  </div>
+
+  <div class="msg-bar" id="r-msg"></div>
+</div>
+
+<div class="modal-overlay" id="modal-painel">
+  <div class="modal">
+    <div class="modal-title">🖥️ Adicionar Novo Painel</div>
+    <div class="field"><label>Nome do painel *</label><input type="text" id="m-nome" placeholder="Ex: Painel Pediatria"/></div>
+    <div class="grid-2">
+      <div class="field"><label>Usuário</label><input type="text" id="m-usuario" placeholder="Ex: pediatria"/></div>
+      <div class="field"><label>Senha</label><input type="text" id="m-senha" placeholder="Ex: mv"/></div>
+    </div>
+    <div class="field"><label>IP <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="m-ip" placeholder="Ex: 10.0.77.92"/></div>
+    <div class="field"><label>Identificação <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label><input type="text" id="m-identificacao" placeholder="Ex: hscmarcon-21420"/></div>
+    <div class="field"><label>Tipo de credencial</label>
+      <select id="m-tipo">
+        <option value="mv">Usuário / Senha (MV)</option>
+        <option value="godash">Usuário / Senha (GoDash)</option>
+        <option value="generico">Genérico</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalPainel()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarPainel()">Salvar Painel</button>
+    </div>
+  </div>
+</div>
+
+<div class="submit-bar">
+  <div class="submit-bar-left">Total de relatórios enviados: <strong id="submit-count">0</strong></div>
+  <div style="display:flex;gap:.75rem" id="submit-btns">
+    <button class="btn btn-ghost" onclick="clearForm()">Limpar formulário</button>
+    <button class="btn btn-primary" onclick="submitReport()" id="submit-btn">Enviar relatório →</button>
+  </div>
+</div>
+
+<script>
+const SCMV=(()=>{
+  const K={users:'scmv_users',reports:'scmv_reports',estoque:'scmv_estoque',session:'scmv_session',paineis:'scmv_paineis'};
+  function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch{return d;}}
+  function save(k,v){localStorage.setItem(k,JSON.stringify(v));}
+  function initStore(){let u=load(K.users,[]);if(!u.find(x=>x.login==='admin')){u.unshift({name:'Administrador SCMV',login:'admin',email:'suporte@santacasavitoria.org',password:'admin',role:'admin',createdAt:new Date().toISOString()});save(K.users,u);}}
+  function getUsers(){return load(K.users,[]);}
+  function getReports(){return load(K.reports,[]);}
+  function saveReports(r){save(K.reports,r);}
+  function getEstoque(){return load(K.estoque,{teclado:3,mouse:11,telefone:5,bobina:29,ssd:0});}
+  function saveEstoque(e){save(K.estoque,e);}
+  function getSession(){const s=load(K.session,null);if(!s)return null;if(Date.now()-s.ts>8*3600*1000){localStorage.removeItem(K.session);return null;}return s;}
+  function logout(){localStorage.removeItem(K.session);}
+  function totalReports(){return getReports().length;}
+  function hardReset(){if(!confirm('Apagar TODOS os dados?'))return;Object.values(K).forEach(k=>localStorage.removeItem(k));initStore();location.href='login.html';}
+  function getPaineis(){return load(K.paineis,paineisPadrao());}
+  function savePaineis(p){save(K.paineis,p);}
+  initStore();
+  return{getUsers,getReports,saveReports,getEstoque,saveEstoque,getSession,logout,totalReports,hardReset,getPaineis,savePaineis};
+})();
+
+function paineisPadrao(){
+  return[
+    {id:1,nome:'CTIB',usuario:'uti',senha:'mv',ip:'10.0.77.92',identificacao:'',tipo:'mv',verificado:false},
+    {id:2,nome:'CTIA',usuario:'uti',senha:'mv',ip:'',identificacao:'',tipo:'mv',verificado:false},
+    {id:3,nome:'Enf. São Lucas',usuario:'enf.saolucas',senha:'mv',ip:'',identificacao:'',tipo:'mv',verificado:false},
+    {id:4,nome:'Enf. Miguel',usuario:'enf.miguel',senha:'mv',ip:'',identificacao:'',tipo:'mv',verificado:false},
+    {id:5,nome:'Pronto-Socorro Enfermagem',usuario:'ps',senha:'mv',ip:'',identificacao:'',tipo:'mv',verificado:false},
+    {id:6,nome:'Centro Cirúrgico',usuario:'cirurgico',senha:'[não informado]',ip:'',identificacao:'',tipo:'mv',verificado:false},
+    {id:7,nome:'Painel de Marcação',usuario:'',senha:'',ip:'10.0.78.174',identificacao:'hscmarcon-21420',tipo:'generico',verificado:false},
+    {id:8,nome:'Painel Centro Diagnóstico',usuario:'cdc',senha:'mv',ip:'',identificacao:'',tipo:'godash',verificado:false},
+    {id:9,nome:'Painel Santa Luiza',usuario:'enf.luiza',senha:'mv',ip:'',identificacao:'',tipo:'godash',verificado:false},
+    {id:10,nome:'Painel Laboratório',usuario:'lab',senha:'mv',ip:'',identificacao:'',tipo:'mv',verificado:false},
+    {id:11,nome:'Painel NIR',usuario:'nir',senha:'mv',ip:'',identificacao:'',tipo:'mv',verificado:false},
+  ];
+}
+
+const sess=SCMV.getSession();
+if(!sess){location.href='login.html';}
+const IS_SUPERVISOR=sess&&sess.role==='supervisor';
+const CAN_SUBMIT=sess&&(sess.role==='user'||sess.role==='admin');
+
+function applyRoleRestrictions(){
+  if(!IS_SUPERVISOR)return;
+  document.getElementById('readonly-banner').style.display='flex';
+  // Desabilita todos inputs/selects/textareas exceto readonly já definidos
+  document.querySelectorAll('input:not([id="r-resp"]),select,textarea').forEach(el=>el.disabled=true);
+  // Botões de submit substituídos
+  document.getElementById('submit-btns').innerHTML=
+    '<a href="painel.html" class="btn btn-ghost">← Voltar ao painel</a>';
+  // Esconde botão adicionar painel
+  const b=document.getElementById('btn-add-painel');
+  if(b)b.style.display='none';
+}
+
+function renderPaineis(){
+  const paineis=SCMV.getPaineis();
+  const grid=document.getElementById('painel-grid');
+  if(!paineis.length){
+    grid.innerHTML='<div style="color:var(--text3);font-size:13px;padding:.5rem 0;">Nenhum painel cadastrado.</div>';
+    return;
+  }
+  grid.innerHTML=paineis.map(p=>{
+    const tipoLabel=p.tipo==='godash'?'GoDash':p.tipo==='generico'?'':' MV';
+    const credLabel=p.tipo!=='generico'&&p.usuario
+      ?`<div class="painel-row">👤 Usuário <strong>(${tipoLabel.trim()}):</strong> <code>${p.usuario}</code></div><div class="painel-row">🔑 Senha: <code>${p.senha}</code></div>`:'';
+    const ipLabel=p.ip?`<div class="painel-row">🌐 IP: <code>${p.ip}</code></div>`:'';
+    const identLabel=p.identificacao?`<div class="painel-row">🏷️ ID: <code>${p.identificacao}</code></div>`:'';
+    const badgeVerif=p.verificado
+      ?`<span class="painel-badge-verif">✓ Verificado</span>`
+      :`<span class="painel-badge-pend">Pendente</span>`;
+    const actions=!IS_SUPERVISOR
+      ?`<div class="painel-actions">
+          <button class="toggle-verif${p.verificado?' ativo':''}" onclick="toggleVerif(${p.id})">${p.verificado?'✅ Verificado':'☐ Marcar verificado'}</button>
+          <button class="btn-del-painel" onclick="deletarPainel(${p.id})" title="Remover">✕</button>
+        </div>`
+      :'';
+    return`<div class="painel-card${p.verificado?' verificado':''}" id="pcard-${p.id}">
+      <div class="painel-card-info">
+        <div class="painel-nome">🖥️ ${p.nome} ${badgeVerif}</div>
+        <div class="painel-rows">${credLabel}${ipLabel}${identLabel}</div>
+      </div>${actions}</div>`;
+  }).join('');
+}
+
+function toggleVerif(id){
+  if(IS_SUPERVISOR)return;
+  const paineis=SCMV.getPaineis();
+  const p=paineis.find(x=>x.id===id);if(!p)return;
+  p.verificado=!p.verificado;
+  SCMV.savePaineis(paineis);renderPaineis();
+}
+function deletarPainel(id){
+  if(IS_SUPERVISOR||!confirm('Remover este painel?'))return;
+  SCMV.savePaineis(SCMV.getPaineis().filter(x=>x.id!==id));renderPaineis();
+}
+function abrirModalPainel(){
+  if(IS_SUPERVISOR)return;
+  ['m-nome','m-usuario','m-senha','m-ip','m-identificacao'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m-tipo').value='mv';
+  document.getElementById('modal-painel').classList.add('open');
+  document.getElementById('m-nome').focus();
+}
+function fecharModalPainel(){document.getElementById('modal-painel').classList.remove('open');}
+document.getElementById('modal-painel').addEventListener('click',function(e){if(e.target===this)fecharModalPainel();});
+function salvarPainel(){
+  if(IS_SUPERVISOR)return;
+  const nome=document.getElementById('m-nome').value.trim();
+  if(!nome){alert('Informe o nome do painel.');return;}
+  const paineis=SCMV.getPaineis();
+  paineis.push({id:Date.now(),nome,
+    usuario:document.getElementById('m-usuario').value.trim(),
+    senha:document.getElementById('m-senha').value.trim(),
+    ip:document.getElementById('m-ip').value.trim(),
+    identificacao:document.getElementById('m-identificacao').value.trim(),
+    tipo:document.getElementById('m-tipo').value,verificado:false});
+  SCMV.savePaineis(paineis);fecharModalPainel();renderPaineis();
+}
+
+function init(){
+  if(!sess)return;
+  const roleLabels={admin:'Admin',supervisor:'Supervisor',user:'Plantonista'};
+  const rc=document.getElementById('role-chip-top');
+  rc.textContent=roleLabels[sess.role]||sess.role;
+  rc.className='role-chip role-'+sess.role;
+  document.getElementById('user-top').textContent=sess.name.split(' ')[0];
+  document.getElementById('r-resp').value=sess.name;
+  const today=new Date();
+  document.getElementById('r-data').value=today.toISOString().split('T')[0];
+  document.getElementById('datetime-area').innerHTML=
+    '<div>'+today.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})+'</div>'
+    +'<div style="margin-top:2px">'+today.toLocaleTimeString('pt-BR')+'</div>';
+  const n=SCMV.totalReports();
+  document.getElementById('total-badge').textContent=n+' relatório'+(n===1?'':'s');
+  document.getElementById('submit-count').textContent=n;
+  const est=SCMV.getEstoque();
+  ['teclado','mouse','telefone','bobina','ssd'].forEach(k=>{
+    const el=document.getElementById('est-'+k);if(el)el.value=est[k]||0;
+  });
+  renderPaineis();
+  applyRoleRestrictions();
+}
+
+function submitReport(){
+  if(!CAN_SUBMIT)return;
+  const status=document.querySelector('input[name=status]:checked').value;
+  const checklist=[...document.querySelectorAll('#checklist .check-row')].map(row=>({
+    label:row.querySelector('span').textContent.trim(),done:row.querySelector('input').checked
+  }));
+  const estoque={};
+  ['teclado','mouse','telefone','bobina','ssd'].forEach(k=>{estoque[k]=parseInt(document.getElementById('est-'+k).value)||0;});
+  SCMV.saveEstoque(estoque);
+  const report={id:Date.now(),author:sess.name,login:sess.login,
+    date:document.getElementById('r-data').value,turno:document.getElementById('r-turno').value,
+    status,checklist,estoque,
+    reclamacoes:document.getElementById('r-reclamacoes').value||'N/D',
+    troca:document.getElementById('r-troca').value||'N/D',
+    pendentes:document.getElementById('r-pendentes').value||'N/D',
+    adicional:document.getElementById('r-adicional').value||'N/D',
+    createdAt:new Date().toISOString()};
+  const reports=SCMV.getReports();reports.unshift(report);SCMV.saveReports(reports);
+  const n=reports.length;
+  document.getElementById('total-badge').textContent=n+' relatório'+(n===1?'':'s');
+  document.getElementById('submit-count').textContent=n;
+  const msg=document.getElementById('r-msg');
+  msg.className='msg-bar success';
+  msg.textContent='✅ Relatório #'+n+' enviado! Redirecionando...';
+  msg.style.display='block';
+  document.getElementById('submit-btn').disabled=true;
+  setTimeout(()=>{location.href='painel.html';},2000);
+}
+function clearForm(){
+  if(!CAN_SUBMIT)return;
+  document.querySelectorAll('#checklist .check-row').forEach(row=>{
+    row.querySelector('input').checked=false;row.classList.remove('done');
+  });
+  document.querySelector('#s-normal').checked=true;
+  ['r-reclamacoes','r-troca','r-pendentes','r-adicional'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('r-msg').style.display='none';
+  document.getElementById('submit-btn').disabled=false;
+}
+init();
+</script>
+</body>
+</html>
